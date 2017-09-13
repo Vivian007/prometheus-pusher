@@ -1,5 +1,7 @@
+//相当于一个库
 package scrape
 
+//导入库
 import (
 	"time"
 	"github.com/prometheus/prometheus/retrieval"
@@ -19,6 +21,7 @@ import (
 
 var pushGateway string
 
+//将"PUSH_GATEWAY"传给pushGateway
 func init() {
 	pushGateway = getOr("PUSH_GATEWAY", "http://pushgateway.example.org:9091")
 }
@@ -34,18 +37,20 @@ func NewJobTargets(tm *retrieval.TargetManager) *JobTargets {
 }
 
 func (jt *JobTargets) Targets() []*jobTarget {
+	//tps ： {"job_name": targets[] ...}
 	tps := map[string][]*retrieval.Target{}
 	for _, t := range jt.tm.Targets() {
 		job := string(t.Labels()[model.JobLabel])
 		tps[job] = append(tps[job], t)
 	}
-
+// _ 意味着 不使用它，不要设置变量
 	for _, targets := range tps {
+		//排序
 		sort.Slice(targets, func(i, j int) bool {
 			return targets[i].Labels()[model.InstanceLabel] < targets[j].Labels()[model.InstanceLabel]
 		})
 	}
-
+	
 	targets := []*jobTarget{}
 	for job, pool := range tps {
 		targets = append(targets, &jobTarget{
@@ -67,6 +72,7 @@ func covertToEndpoints(targets []*retrieval.Target) []*jobEndpoint {
 	return endpoints
 }
 
+//声明结构体
 type jobTarget struct {
 	Name      string
 	Endpoints []*jobEndpoint
